@@ -66,6 +66,37 @@ class ProfileController extends Controller
             'profile' => $profile,
         ], 201);
     }
+
+    public function getTechnicianProfile($email)
+    {
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        $userProfile = UserProfile::where('user_id', $user->id)->first();
+
+        if (!$userProfile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Technician profile not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Technician profile retrieved successfully',
+            'data' => $userProfile
+        ], 200);
+    }
+
+
+
+
 }
 
 
