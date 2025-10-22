@@ -19,8 +19,6 @@ use App\Http\Controllers\ProfileController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-<<<<<<< HEAD
-=======
 
 // Authentication
 Route::post('/login', [AuthController::class, 'login']);
@@ -30,4 +28,3 @@ Route::post('/technician/profile', [ProfileController::class, 'store']);
 // routes/api.php
 Route::get('/technician/{email}/profile', [ProfileController::class, 'getTechnicianProfile']);
 
->>>>>>> f4237619b1744d00c3de621f484f28e7a7629d53
