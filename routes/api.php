@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Api\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,4 +28,10 @@ Route::post('/technician/profile', [ProfileController::class, 'store']);
 
 // routes/api.php
 Route::get('/technician/{email}/profile', [ProfileController::class, 'getTechnicianProfile']);
+
+
+Route::get('/bookings', [BookingController::class, 'index']);
+Route::get('/bookings/technician/{technician_id}/{status}', [BookingController::class, 'byTechnicianAndStatus']);
+Route::get('/bookings/{id}', [BookingController::class, 'show']);
+
 
