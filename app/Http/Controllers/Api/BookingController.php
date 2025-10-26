@@ -38,8 +38,8 @@ class BookingController extends Controller
         ->join('car_models', 'user_cars.car_model_id', '=', 'car_models.id')
         ->join('users', 'user_cars.user_id', '=', 'users.id')
         ->Join('invoice', 'bookings.invoice_id', '=', 'invoice.id')
-        ->leftJoin('invoice_items', 'invoice.id', '=', 'invoice_items.invoice_id')
-        ->leftJoin('products', 'invoice_items.product_id', '=', 'products.id')
+        ->Join('invoice_items', 'invoice.id', '=', 'invoice_items.invoice_id')
+        ->Join('products', 'invoice_items.product_id', '=', 'products.id')
         ->leftJoin('warranty_groups', 'products.warranty_group_id', '=', 'warranty_groups.id')
         ->leftJoin('warranty', 'warranty.warranty_group_id', '=', 'warranty_groups.id')
         ->select(
@@ -50,12 +50,21 @@ class BookingController extends Controller
             'user_cars.license_plate as plate',
             'products.description as product_name',
             'products.description as product_model',
+            'products.sale_price as price',
             'warranty.duration_months AS warranty_months',
             'warranty.max_mileage_km AS warranty_km',
             'bookings.location as pickup',
-            'bookings.preferred_date as delivery',
+            'bookings.preferred_date',
             'bookings.status'
         )
+        ->where('bookings.technician_id', $technician_id)
+        ->where(function ($query) use ($status) {
+            if ($status === 'assigned') {
+                $query->where('bookings.status', 'assigned');
+            } elseif ($status === 'completed') {
+                $query->where('bookings.status', 'completed');
+            }
+        })
         ->get();
 
 

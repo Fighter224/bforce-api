@@ -69,7 +69,10 @@ class ProfileController extends Controller
 
     public function getTechnicianProfile($email)
     {
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $email)
+        ->where('role', 'technician')
+        ->first();
+
 
         if (!$user) {
             return response()->json([
