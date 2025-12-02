@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -55,7 +56,7 @@ class ProfileController extends Controller
                 'vehicle_type' => $request->input('vehicle_type'),
                 'plate_number' => $request->input('plate_number'),
                 'ic_no' => $request->input('ic_no'),
-                'agreement_check' => (bool) $request->input('agreement'),
+                'agreement_check' => (bool) $request->input('agreement_check'),
                 'profile_image' => $profileImagePath,
             ]
         );
@@ -96,6 +97,30 @@ class ProfileController extends Controller
             'data' => $userProfile
         ], 200);
     }
+
+    public function getTechnicianAllProfile($id)
+    {
+        $userProfile = DB::table('users')
+            ->join('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+            ->where('users.id', $id)
+            ->where('users.role', 'technician')
+            ->select('users.*', 'user_profiles.*')
+            ->first();
+
+        if (!$userProfile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Technician profile not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Technician profile retrieved successfully',
+            'data' => $userProfile
+        ], 200);
+    }
+
 
 
 

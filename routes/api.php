@@ -28,6 +28,7 @@ Route::post('/technician/profile', [ProfileController::class, 'store']);
 
 // routes/api.php
 Route::get('/technician/{email}/profile', [ProfileController::class, 'getTechnicianProfile']);
+Route::get('/technician/{id}/allprofile', [ProfileController::class, 'getTechnicianAllProfile']);
 
 
 Route::get('/bookings', [BookingController::class, 'index']);
