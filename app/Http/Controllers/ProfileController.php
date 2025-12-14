@@ -121,6 +121,28 @@ class ProfileController extends Controller
         ], 200);
     }
 
+    public function getTechnicianAll()
+    {
+        $userProfile = DB::table('users')
+            ->join('technician_ratings', 'users.id', '=', 'technician_ratings.technician_id')
+            ->where('users.role', 'technician')
+            ->select('users.*', 'technician_ratings.*')
+            ->get();
+
+        if (!$userProfile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Technician profile not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Technician profile retrieved successfully',
+            'data' => $userProfile
+        ], 200);
+    }
+
 
 
 
