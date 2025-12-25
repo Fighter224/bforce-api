@@ -4,14 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; // ✅ add this
+use Illuminate\Support\Str;
 
-class UserProfile extends Model
+class TodayTask extends Model
 {
     use HasFactory;
 
-    protected $keyType = 'string';
+    // UUID Configuration
     public $incrementing = false;
+    protected $keyType = 'string';
 
     protected static function boot()
     {
@@ -26,21 +27,20 @@ class UserProfile extends Model
 
     protected $fillable = [
         'user_id',
-        'vehicle_type',
-        'plate_number',
-        'ic_no',
-        'agreement_check',
-        'profile_image',
-        'address',
-        'city',
-        'state',
-        'postcode',
-        'gender',
-        'dob',
-
+        'task_type',
+        'label',
+        'status',
+        'file_path',
+        'details',
+        'meta_data'
     ];
 
     protected $casts = [
-        'agreement_check' => 'boolean',
+        'meta_data' => 'array',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

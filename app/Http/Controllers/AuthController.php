@@ -46,9 +46,12 @@ class AuthController extends Controller
             ], 403);
         }
 
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
+            'token' => $token, // Return token
             'redirect' => '/tabs/home',
             'user' => [
                 'id' => $user->id,

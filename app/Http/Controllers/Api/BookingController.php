@@ -33,39 +33,39 @@ class BookingController extends Controller
     public function byTechnicianAndStatus($technician_id, $status)
     {
         $bookings = DB::table('bookings')
-        ->join('user_cars', 'bookings.user_car_id', '=', 'user_cars.id')
-        ->join('car_brands', 'user_cars.car_brand_id', '=', 'car_brands.id')
-        ->join('car_models', 'user_cars.car_model_id', '=', 'car_models.id')
-        ->join('users', 'user_cars.user_id', '=', 'users.id')
-        ->Join('invoice', 'bookings.invoice_id', '=', 'invoice.id')
-        ->Join('invoice_items', 'invoice.id', '=', 'invoice_items.invoice_id')
-        ->Join('products', 'invoice_items.product_id', '=', 'products.id')
-        ->leftJoin('warranty_groups', 'products.warranty_group_id', '=', 'warranty_groups.id')
-        ->leftJoin('warranty', 'warranty.warranty_group_id', '=', 'warranty_groups.id')
-        ->select(
-            'bookings.id',
-            'users.name',
-            'users.phone',
-            DB::raw('CONCAT(car_brands.name, " ", car_models.name) as car'),
-            'user_cars.license_plate as plate',
-            'products.description as product_name',
-            'products.description as product_model',
-            'products.sale_price as price',
-            'warranty.duration_months AS warranty_months',
-            'warranty.max_mileage_km AS warranty_km',
-            'bookings.location as pickup',
-            'bookings.preferred_date',
-            'bookings.status'
-        )
-        ->where('bookings.technician_id', $technician_id)
-        ->where(function ($query) use ($status) {
-            if ($status === 'assigned') {
-                $query->where('bookings.status', 'assigned');
-            } elseif ($status === 'completed') {
-                $query->where('bookings.status', 'completed');
-            }
-        })
-        ->get();
+            ->join('user_cars', 'bookings.user_car_id', '=', 'user_cars.id')
+            ->join('car_brands', 'user_cars.car_brand_id', '=', 'car_brands.id')
+            ->join('car_models', 'user_cars.car_model_id', '=', 'car_models.id')
+            ->join('users', 'user_cars.user_id', '=', 'users.id')
+            ->Join('invoice', 'bookings.invoice_id', '=', 'invoice.id')
+            ->Join('invoice_items', 'invoice.id', '=', 'invoice_items.invoice_id')
+            ->Join('products', 'invoice_items.product_id', '=', 'products.id')
+            ->leftJoin('warranty_groups', 'products.warranty_group_id', '=', 'warranty_groups.id')
+            ->leftJoin('warranty', 'warranty.warranty_group_id', '=', 'warranty_groups.id')
+            ->select(
+                'bookings.id',
+                'users.name',
+                'users.phone',
+                DB::raw('CONCAT(car_brands.name, " ", car_models.name) as car'),
+                'user_cars.license_plate as plate',
+                'products.description as product_name',
+                'products.description as product_model',
+                'products.sale_price as price',
+                'warranty.duration_months AS warranty_months',
+                'warranty.max_mileage_km AS warranty_km',
+                'bookings.location as pickup',
+                'bookings.preferred_date',
+                'bookings.status'
+            )
+            ->where('bookings.technician_id', $technician_id)
+            ->where(function ($query) use ($status) {
+                if ($status === 'assigned') {
+                    $query->where('bookings.status', 'assigned');
+                } elseif ($status === 'completed') {
+                    $query->where('bookings.status', 'completed');
+                }
+            })
+            ->get();
 
 
         return response()->json([
@@ -350,5 +350,58 @@ class BookingController extends Controller
                 'payment_method' => $booking->payment_method ?? '**** **** **** 2951',
             ],
         ]);
+    }
+
+    public function uploadInstallationProof(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'alternator_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'starter_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'odometer_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'plate_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'battery_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $booking = Booking::findOrFail($id);
+
+            // Upload each image if provided
+            foreach (['alternator', 'starter', 'odometer', 'plate', 'battery'] as $type) {
+                $fieldName = $type . '_image';
+                if ($request->hasFile($fieldName)) {
+                    // Delete old image if exists
+                    if ($booking->$fieldName && \Storage::disk('public')->exists($booking->$fieldName)) {
+                        \Storage::disk('public')->delete($booking->$fieldName);
+                    }
+
+                    // Store new image
+                    $path = $request->file($fieldName)->store('installation-proof', 'public');
+                    $booking->$fieldName = $path;
+                }
+            }
+
+            $booking->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Images uploaded successfully',
+                'data' => $booking
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Installation proof upload error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload images',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

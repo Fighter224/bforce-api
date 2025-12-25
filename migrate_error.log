@@ -1,0 +1,25 @@
+
+   INFO  Running migrations.  
+
+  2025_09_25_000001_create_user_profiles_table  3ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'user_profiles' already exists (SQL: create table `user_profiles` (`id` bigint unsigned not null auto_increment primary key, `user_id` bigint unsigned not null, `vehicle_type` varchar(255) not null, `plate_number` varchar(255) not null, `ic_no` varchar(255) not null, `agreement` tinyint(1) not null default '0', `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci')
+
+  at C:\Users\Idris\Documents\Intern\bforce-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+  1   C:\Users\Idris\Documents\Intern\bforce-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:545
+      PDOException::("SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'user_profiles' already exists")
+
+  2   C:\Users\Idris\Documents\Intern\bforce-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:545
+      PDOStatement::execute()

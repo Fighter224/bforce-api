@@ -71,8 +71,8 @@ class ProfileController extends Controller
     public function getTechnicianProfile($email)
     {
         $user = User::where('email', $email)
-        ->where('role', 'technician')
-        ->first();
+            ->where('role', 'technician')
+            ->first();
 
 
         if (!$user) {
@@ -146,6 +146,118 @@ class ProfileController extends Controller
 
 
 
+    public function updateAccountInfo(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'technician_id' => ['required', 'exists:users,id'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:255'],
+            'ic' => ['nullable', 'string', 'max:255'],
+            'gender' => ['nullable', 'string', 'in:Male,Female'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255'],
+            'postcode' => ['nullable', 'string', 'max:10'],
+            'dob' => ['nullable', 'date'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::find($request->input('technician_id'));
+
+        if (!$user || $user->role !== 'technician') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        // Update users table
+        if ($request->has('name'))
+            $user->name = $request->input('name');
+        if ($request->has('phone'))
+            $user->phone = $request->input('phone');
+        if ($request->has('ic'))
+            $user->ic = $request->input('ic');
+        $user->save();
+
+        // Update user_profiles table
+        $profileData = [];
+        if ($request->has('gender'))
+            $profileData['gender'] = $request->input('gender');
+        if ($request->has('address'))
+            $profileData['address'] = $request->input('address');
+        if ($request->has('city'))
+            $profileData['city'] = $request->input('city');
+        if ($request->has('state'))
+            $profileData['state'] = $request->input('state');
+        if ($request->has('postcode'))
+            $profileData['postcode'] = $request->input('postcode');
+        if ($request->has('dob'))
+            $profileData['dob'] = $request->input('dob');
+
+        if (!empty($profileData)) {
+            UserProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                $profileData
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account information updated successfully',
+        ], 200);
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email', 'exists:users,email'],
+            'profile_image' => ['required', 'image', 'max:5120'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->input('email'))->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found'], 404);
+        }
+
+        if ($request->hasFile('profile_image')) {
+            $file = $request->file('profile_image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('profile_images', $filename, 'public');
+
+            $profile = UserProfile::firstOrNew(['user_id' => $user->id]);
+            $profile->profile_image = $path;
+
+            // Try to save. If it fails due to missing fields on new profile, we catch it? 
+            // Laravel usually throws exception.
+            // Assuming existing profile for technician.
+            try {
+                $profile->save();
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'Failed to save profile. Ensure profile is completed first.', 'error' => $e->getMessage()], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile image updated',
+                'data' => $profile
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No image uploaded'], 400);
+    }
 
 }
 
